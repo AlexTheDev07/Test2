@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech to Text</title>
+    <link rel="stylesheet" href="speech.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Speech</h2>
+        <button id="recordButton" class="button" onclick="toggleRecording()">Start Recording</button>
+        <div id="transcription" aria-live="polite" placeholder="Your speech will appear here..."></div>
+    </div>
+    <div id="outputBox" aria-live="polite" placeholder="Output will appear here..."></div>
+    <button id="saveButton" class="button">Save Transcription</button>
+
+    <script type="module" src="speech.js"></script>
+
+    <script>
+        let isRecording = false;
+        let recognition;
+
+        function toggleRecording() {
+            if (!('webkitSpeechRecognition' in window)) {
+                alert("Your browser doesn't support speech recognition. Try using Chrome.");
+                return;
+            }
+
+            if (isRecording) {
+                recognition.stop();
+                document.getElementById('recordButton').textContent = "Start Recording";
+                isRecording = false;
+            } else {
+                recognition = new webkitSpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = 'no-NO';
+
+                recognition.onstart = function() {
+                    document.getElementById('transcription').innerHTML = "Listening...";
+                    document.getElementById('recordButton').textContent = "Stop Recording";
+                    isRecording = true;
+                };
+
+                recognition.onresult = function(event) {
+                    let transcript = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        transcript += event.results[i][0].transcript;
+                    }
+                    document.getElementById('transcription').innerHTML = transcript;
+                };
+
+                recognition.onerror = function(event) {
+                    alert('Error occurred in speech recognition: ' + event.error);
+                    isRecording = false;
+                    document.getElementById('recordButton').textContent = "Start Recording";
+                };
+
+                recognition.onend = function() {
+                    if (isRecording) {
+                        document.getElementById('transcription').innerHTML += " [Stopped Listening]";
+                        document.getElementById('recordButton').textContent = "Start Recording";
+                        isRecording = false;
+                    }
+                };
+
+                recognition.start();
+            }
+        }
+    </script>
+</body>
+</html>
